@@ -442,12 +442,7 @@
     <h2 class="section-title">הקולקציה הנוכחית</h2>
     <p class="section-sub">כל הפריטים מודפסים לפי הזמנה. משלוח תוך 7–14 ימים. צבעים מותאמים אישית על פי בקשה.</p>
 
-    <div class="filter-bar">
-      <button class="filter-btn active" onclick="filterProducts('all', this)">הכל</button>
-      <button class="filter-btn" onclick="filterProducts('lamp', this)">מנורות</button>
-      <button class="filter-btn" onclick="filterProducts('shade', this)">אהילים</button>
-      <button class="filter-btn" onclick="filterProducts('decor', this)">עיצוב</button>
-    </div>
+    <div class="filter-bar" id="filter-bar"></div>
 
     <div class="product-grid" id="product-grid"></div>
   </section>
@@ -465,7 +460,7 @@
       <div class="step">
         <div class="step-num">02</div>
         <h3>הדפסה</h3>
-        <p>מודפס ב-PLA, PETG או שרף בהתאם לעיצוב. כל הדפסה לוקחת 6–20 שעות מכונה.</p>
+        <p>מודפס על Bambu Lab H2D בעל שתי נחירים — שני צבעים או שני חומרים בהדפסה אחת. PLA, PETG, TPU ועוד, בהתאם לעיצוב. כל הדפסה לוקחת 6–20 שעות מכונה.</p>
       </div>
       <div class="step">
         <div class="step-num">03</div>
@@ -504,7 +499,10 @@
           <option>מנורת רצפה</option>
           <option>אהיל תלייה</option>
           <option>מנורת קיר</option>
-          <option>פריט עיצובי</option>
+          <option>מנורת פופ / עיצוב שלי</option>
+          <option>מתנה בהתאמה אישית (ליתופן, שם, מפה)</option>
+          <option>פריט עיצובי לבית</option>
+          <option>אביזר לשולחן עבודה</option>
           <option>אחר / לא בטוח</option>
         </select>
       </div>
@@ -587,20 +585,69 @@
 
   <script>
     const products = [
-      { id:9, name:"מנורת פחית Monster", category:"lamp", price:"₪159", desc:"פחית Monster Energy Ultra מודפסת בתלת-מימד עם תאורה פנימית הניתנת להחלפה — אור חם קלאסי או תאורת LED צבעונית.", variants:[{img:"images/monster-lamp-warm.jpg", label:"אור חם"},{img:"images/monster-lamp-color.jpg", label:"אור צבעוני"}], badge:"הנמכר ביותר" },
-      { id:11, name:"מנורת שבלול", category:"decor", price:"₪249", desc:"שבלול מודפס בתלת-מימד עם קונכייה מפוזרת אור. זמין באור חם או באור לבן קר, לבחירתך.", variants:[{img:"images/snail-lamp-warm.jpg", label:"אור חם"},{img:"images/snail-lamp-white.jpg", label:"אור לבן"}], badge:"חדש" },
+      // מנורות שולחן ורצפה
+      { id:11, name:"מנורת שבלול", category:"lamp", price:"₪249", desc:"שבלול מודפס בתלת-מימד עם קונכייה מפוזרת אור. זמין באור חם או באור לבן קר, לבחירתך.", variants:[{img:"images/snail-lamp-warm.jpg", label:"אור חם"},{img:"images/snail-lamp-white.jpg", label:"אור לבן"}], badge:"חדש" },
       { id:1, name:"מנורת שולחן וורונוי", category:"lamp", price:"₪349", desc:"רשת וורונוי גיאומטרית. אור חם ומפוזר דרך PLA טבעי.", emoji:"🔆", badge:null },
-      { id:2, name:"אהיל הליקס לתלייה", category:"shade", price:"₪229", desc:"צורת הליקס מתפתלת לאהילי תלייה. זמין ב-4 צבעים.", emoji:"💡", badge:null },
-      { id:3, name:"מנורת רצפה עלה", category:"lamp", price:"₪589", desc:"אהיל עלה גדול על רגל מט דקה. מבטאת חדר.", emoji:"🌸", badge:"חדש" },
+      { id:7, name:"מנורת שולחן קשת", category:"lamp", price:"₪319", desc:"קו קשת נקי עם קרן ממוקדת. מושלם לסביבת עבודה.", emoji:"🕯️", badge:null },
       { id:4, name:"מנורת קוביות", category:"lamp", price:"₪289", desc:"קוביות מודולריות. לערום ולהרכיב לפי הטעם.", emoji:"🟫", badge:null },
-      { id:5, name:"מנורת קיר גל", category:"shade", price:"₪199", desc:"משטח גל עדין שלוכד את האור בצורה מקסימה.", emoji:"〰️", badge:null },
+      { id:12, name:"מנורת ספירלה דו-צבעית", category:"lamp", price:"₪279", desc:"דופן ספירלית דקה בשני צבעים שמשתלבים זה בזה — מודפסת בשתי נחירים בבת אחת, בלי תפרים.", emoji:"🌀", badge:"חדש" },
+      { id:13, name:"מנורה טופוגרפית", category:"lamp", price:"₪329", desc:"שכבות קווי גובה של הר או מכתש אמיתי. האור מדגיש כל שכבה.", emoji:"🏔️", badge:null },
+      { id:3, name:"מנורת רצפה עלה", category:"lamp", price:"₪589", desc:"אהיל עלה גדול על רגל מט דקה. מבטאת חדר.", emoji:"🌸", badge:null },
+
+      // אהילים ותלייה
+      { id:2, name:"אהיל הליקס לתלייה", category:"shade", price:"₪229", desc:"צורת הליקס מתפתלת לאהילי תלייה. זמין ב-4 צבעים.", emoji:"💡", badge:null },
+      { id:14, name:"אהיל פעמון XL", category:"shade", price:"₪389", desc:"אהיל ענק בקוטר 30 ס״מ, מודפס בחתיכה אחת — לשולחן אוכל או לאי מטבח.", emoji:"🔔", badge:"חדש" },
+      { id:15, name:"אהיל פרקטל", category:"shade", price:"₪269", desc:"ענפים מתפצלים שמטילים צללים מורכבים על התקרה והקירות.", emoji:"❄️", badge:null },
+      { id:16, name:"אהיל קפלים", category:"shade", price:"₪199", desc:"קפלי אוריגמי חדים שמפזרים אור רך ושווה. בהשראת נייר מקופל.", emoji:"🏮", badge:null },
+
+      // מנורות קיר
+      { id:5, name:"מנורת קיר גל", category:"wall", price:"₪199", desc:"משטח גל עדין שלוכד את האור בצורה מקסימה.", emoji:"〰️", badge:null },
+      { id:17, name:"פנלים משושים מודולריים", category:"wall", price:"₪149", desc:"סט 3 משושי אור שמתחברים זה לזה — מתחילים קטן ומוסיפים בכל פעם. מחיר לסט.", emoji:"⬡", badge:null },
+      { id:18, name:"מנורת ירח לקיר", category:"wall", price:"₪239", desc:"חצי ירח עם מכתשים מפורטים, נתלה על הקיר ונדלק באור לבן-כחלחל.", emoji:"🌙", badge:null },
+
+      // מנורות פופ
+      { id:9, name:"מנורת פחית Monster", category:"pop", price:"₪159", desc:"פחית Monster Energy Ultra מודפסת בתלת-מימד עם תאורה פנימית הניתנת להחלפה — אור חם קלאסי או תאורת LED צבעונית.", variants:[{img:"images/monster-lamp-warm.jpg", label:"אור חם"},{img:"images/monster-lamp-color.jpg", label:"אור צבעוני"}], badge:"הנמכר ביותר" },
+      { id:19, name:"פחית עם התווית שלך", category:"pop", price:"₪189", desc:"אותה מנורת פחית — עם עיצוב, שם או לוגו משלכם. מושלם למתנה או לעסק.", emoji:"🥫", badge:null },
+      { id:20, name:"מנורת קלטת רטרו", category:"pop", price:"₪199", desc:"קלטת שמע ענקית עם סלילים שקופים שנדלקים. נוסטלגיה של שנות ה-80.", emoji:"📼", badge:null },
+      { id:21, name:"מנורת פיקסלים", category:"pop", price:"₪219", desc:"דמויות בסגנון משחקי 8-ביט, בצבעים מלאים מהמדפסת — בלי צביעה.", emoji:"👾", badge:null },
+
+      // מתנות בהתאמה אישית
+      { id:22, name:"מנורת ליתופן מתמונה", category:"gift", price:"₪229", desc:"התמונה שלכם מודפסת בעוביים משתנים — כבויה נראית לבנה, דולקת חושפת את התמונה בפרטי פרטים.", emoji:"🖼️", badge:"מומלץ למתנה" },
+      { id:23, name:"מנורת שם", category:"gift", price:"₪179", desc:"שם או מילה באותיות תלת-מימד מוארות, על בסיס עץ עם חריטת לייזר של תאריך או הקדשה.", emoji:"✨", badge:null },
+      { id:24, name:"מנורת לילה לחדר ילדים", category:"gift", price:"₪159", desc:"דמות חמודה (דינוזאור, ענן, חללית) עם שם הילד. אור חם ועמום ומעטפת בטוחה לחלוטין.", emoji:"🦕", badge:null },
+      { id:25, name:"מפת עיר מוארת", category:"gift", price:"₪299", desc:"מפת הרחובות של העיר או השכונה שלכם בתבליט, מוארת מאחור. אפשר לסמן נקודה מיוחדת.", emoji:"🗺️", badge:null },
+
+      // עיצוב הבית
       { id:6, name:"אגרטל כוורת", category:"decor", price:"₪129", desc:"מבנה משושה בהשראת כוורת. לפרחים או כפריט עצמאי.", emoji:"🍯", badge:null },
-      { id:7, name:"מנורת שולחן קשת", category:"lamp", price:"₪319", desc:"קו קשת נקי עם קרן ממוקדת. מושלם לסביבת עבודה.", emoji:"🕯️", badge:"חדש" },
       { id:8, name:"קערת טרצו", category:"decor", price:"₪89", desc:"מודפס עם חוטים מעורבים לטקסטורת טרצו מיוחדת.", emoji:"🫙", badge:null },
+      { id:26, name:"עציץ בהשקיה עצמית", category:"decor", price:"₪119", desc:"מיכל מים נסתר בבסיס שמשקה את הצמח לבד במשך שבועות. מודפס ב-PETG אטום למים.", emoji:"🪴", badge:null },
+      { id:27, name:"מגש מפתחות גלי", category:"decor", price:"₪79", desc:"מגש לכניסה לבית עם תחתית סיליקון רכה שלא מחליקה — מודפס בשני חומרים יחד.", emoji:"🔑", badge:null },
+
+      // שולחן עבודה
+      { id:28, name:"מעמד אוזניות", category:"desk", price:"₪99", desc:"מעמד יציב עם ריפוד רך בנקודת המגע, כך שהקשת לא נשרטת.", emoji:"🎧", badge:null },
+      { id:29, name:"מעמד לטלפון ולטאבלט", category:"desk", price:"₪69", desc:"זווית מתכווננת וחריץ לכבל טעינה. רגליות גומי שלא זזות על השולחן.", emoji:"📱", badge:null },
+      { id:30, name:"מארגן שולחן מודולרי", category:"desk", price:"₪129", desc:"תאים לעטים, כרטיסים ומטבעות שננעלים זה בזה. מרכיבים לפי מה שצריך.", emoji:"🗂️", badge:null },
+      { id:31, name:"מנורת שולחן לעבודה", category:"desk", price:"₪259", desc:"זרוע מתקפלת עם מפרקים ואור לבן ממוקד לקריאה ולעבודה. מודפסת מ-PETG עמיד בחום.", emoji:"🔦", badge:null },
     ];
 
-    const categoryLabels = { lamp: 'מנורה', shade: 'אהיל', decor: 'עיצוב' };
+    const categoryLabels = {
+      lamp: 'מנורות שולחן ורצפה',
+      shade: 'אהילים ותלייה',
+      wall: 'מנורות קיר',
+      pop: 'מנורות פופ',
+      gift: 'מתנות בהתאמה אישית',
+      decor: 'עיצוב הבית',
+      desk: 'שולחן עבודה',
+    };
     let currentFilter = 'all';
+
+    function renderFilters() {
+      const cats = [['all', 'הכל'], ...Object.entries(categoryLabels)];
+      document.getElementById('filter-bar').innerHTML = cats.map(([key, label]) => {
+        const count = key === 'all' ? products.length : products.filter(p => p.category === key).length;
+        return `<button class="filter-btn ${key === currentFilter ? 'active' : ''}" onclick="filterProducts('${key}', this)">${label} (${count})</button>`;
+      }).join('');
+    }
 
     function renderProducts(filter) {
       const grid = document.getElementById('product-grid');
@@ -853,6 +900,7 @@
     document.querySelectorAll('input, textarea').forEach(el =>
       el.addEventListener('input', () => el.classList.remove('field-error')));
 
+    renderFilters();
     renderProducts('all');
     renderCart();
   </script>
