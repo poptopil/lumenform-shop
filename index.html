@@ -306,9 +306,73 @@
     .footer-links a:hover { color: var(--amber); }
     .footer-copy { color: var(--muted); font-size: 0.78rem; }
 
+    /* CART DRAWER */
+    .cart-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.6);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .cart-overlay.open { opacity: 1; pointer-events: auto; }
+    .cart-drawer {
+      position: fixed; top: 0; bottom: 0; left: 0; z-index: 201;
+      width: min(440px, 100%);
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      transform: translateX(-100%); transition: transform 0.3s ease;
+    }
+    .cart-drawer.open { transform: translateX(0); }
+    .cart-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .cart-head h2 { font-size: 1.2rem; font-weight: 700; }
+    .cart-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 1.6rem; line-height: 1; cursor: pointer; padding: 0.2rem 0.5rem;
+    }
+    .cart-close:hover { color: var(--amber); }
+    .cart-body { flex: 1; overflow-y: auto; padding: 1.2rem 1.5rem; }
+    .cart-empty { color: var(--muted); text-align: center; padding: 3rem 0; }
+    .cart-item {
+      display: grid; grid-template-columns: 64px 1fr auto; gap: 0.9rem;
+      align-items: center; padding: 0.9rem 0; border-bottom: 1px solid var(--border);
+    }
+    .cart-thumb {
+      width: 64px; height: 64px; background: var(--card);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; overflow: hidden;
+    }
+    .cart-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .cart-item-name { font-weight: 500; font-size: 0.95rem; }
+    .cart-item-meta { color: var(--muted); font-size: 0.8rem; }
+    .cart-item-side { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; }
+    .qty { display: flex; align-items: center; border: 1px solid var(--border); }
+    .qty button {
+      background: none; border: none; color: var(--text);
+      width: 1.8rem; height: 1.8rem; cursor: pointer; font-size: 1rem;
+    }
+    .qty button:hover { color: var(--amber); }
+    .qty span { min-width: 1.6rem; text-align: center; font-size: 0.9rem; }
+    .cart-remove {
+      background: none; border: none; color: var(--muted);
+      font-family: 'Heebo', sans-serif; font-size: 0.75rem; cursor: pointer; text-decoration: underline;
+    }
+    .cart-remove:hover { color: var(--amber); }
+    .cart-total {
+      display: flex; justify-content: space-between;
+      font-size: 1.1rem; font-weight: 500; padding: 1.2rem 0;
+    }
+    .cart-total strong { color: var(--amber); }
+    .checkout h3 { font-size: 1rem; font-weight: 500; margin: 0.5rem 0 1rem; }
+    .checkout .form-group textarea { min-height: 80px; }
+    .checkout-note { color: var(--muted); font-size: 0.78rem; margin: 0.6rem 0 0; }
+    .btn-whatsapp { width: 100%; }
+    .field-error { border-color: #E0645A !important; }
+
     /* TOAST */
     .toast {
       position: fixed; bottom: 2rem; left: 2rem; z-index: 999;
+      max-width: calc(100% - 4rem);
       background: var(--amber); color: #1A1A1A;
       padding: 0.75rem 1.5rem; font-size: 0.875rem; font-weight: 500;
       transform: translateY(100px); opacity: 0;
@@ -343,7 +407,7 @@
       <li><a href="#custom">הזמנה מותאמת</a></li>
       <li><a href="#about">אודות</a></li>
     </ul>
-    <button class="nav-cart" onclick="showToast('העגלה בקרוב!')">עגלה (0)</button>
+    <button class="nav-cart" id="nav-cart" onclick="openCart()">עגלה (0)</button>
   </nav>
 
   <!-- HERO -->
@@ -425,17 +489,17 @@
     <div class="custom-inner">
       <div class="form-group form-row">
         <div>
-          <label>שם מלא</label>
-          <input type="text" placeholder="ישראל ישראלי" />
+          <label for="custom-name">שם מלא *</label>
+          <input type="text" id="custom-name" autocomplete="name" placeholder="ישראל ישראלי" />
         </div>
         <div>
-          <label>אימייל</label>
-          <input type="email" placeholder="israel@email.com" />
+          <label for="custom-email">אימייל (לא חובה)</label>
+          <input type="email" id="custom-email" autocomplete="email" placeholder="israel@email.com" />
         </div>
       </div>
       <div class="form-group">
-        <label>מה אתה מחפש?</label>
-        <select>
+        <label for="custom-type">מה אתה מחפש?</label>
+        <select id="custom-type">
           <option>מנורת שולחן</option>
           <option>מנורת רצפה</option>
           <option>אהיל תלייה</option>
@@ -445,14 +509,15 @@
         </select>
       </div>
       <div class="form-group">
-        <label>העדפת צבע / חומר</label>
-        <input type="text" placeholder="למשל: שחור מט, לבן טבעי, טרקוטה..." />
+        <label for="custom-color">העדפת צבע / חומר</label>
+        <input type="text" id="custom-color" placeholder="למשל: שחור מט, לבן טבעי, טרקוטה..." />
       </div>
       <div class="form-group">
-        <label>ספר לי עוד</label>
-        <textarea placeholder="מידות, סגנון, תמונות השראה, תקציב, לוח זמנים — כל פרט עוזר..."></textarea>
+        <label for="custom-details">ספר לי עוד *</label>
+        <textarea id="custom-details" placeholder="מידות, סגנון, תמונות השראה, תקציב, לוח זמנים — כל פרט עוזר..."></textarea>
       </div>
-      <button class="btn-primary" onclick="showToast('ההודעה נשלחה! אחזור אליך תוך 48 שעות.')">שליחת בקשה</button>
+      <button class="btn-primary" onclick="sendCustomRequest()">שליחת בקשה בוואטסאפ</button>
+      <p class="checkout-note">הכפתור יפתח את וואטסאפ עם הבקשה מוכנה — רק ללחוץ "שלח". תמונות השראה אפשר לצרף ישירות בשיחה.</p>
     </div>
   </section>
 
@@ -482,6 +547,40 @@
     </ul>
     <p class="footer-copy">© 2026 לומנפורם. כל הפריטים עבודת יד.</p>
   </footer>
+
+  <!-- CART DRAWER -->
+  <div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+  <aside class="cart-drawer" id="cart-drawer" aria-label="עגלת קניות" aria-hidden="true">
+    <div class="cart-head">
+      <h2>העגלה שלך</h2>
+      <button class="cart-close" onclick="closeCart()" aria-label="סגירה">×</button>
+    </div>
+    <div class="cart-body">
+      <div id="cart-items"></div>
+      <div id="cart-checkout" class="checkout">
+        <div class="cart-total"><span>סה״כ</span><strong id="cart-total"></strong></div>
+        <h3>פרטים למשלוח</h3>
+        <div class="form-group">
+          <label for="order-name">שם מלא *</label>
+          <input type="text" id="order-name" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label for="order-phone">טלפון *</label>
+          <input type="tel" id="order-phone" autocomplete="tel" placeholder="050-0000000" />
+        </div>
+        <div class="form-group">
+          <label for="order-address">כתובת למשלוח *</label>
+          <input type="text" id="order-address" autocomplete="street-address" placeholder="רחוב, מספר, עיר" />
+        </div>
+        <div class="form-group">
+          <label for="order-notes">הערות (צבע, הקדשה, זמני משלוח...)</label>
+          <textarea id="order-notes"></textarea>
+        </div>
+        <button class="btn-primary btn-whatsapp" onclick="sendOrder()">שליחת הזמנה בוואטסאפ</button>
+        <p class="checkout-note">ההזמנה תיפתח בוואטסאפ מוכנה לשליחה. אאשר זמינות, משלוח ואמצעי תשלום בשיחה — לא נגבה תשלום באתר.</p>
+      </div>
+    </div>
+  </aside>
 
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
@@ -532,7 +631,7 @@
             <div class="card-desc">${p.desc}</div>
             <div class="card-footer">
               <div class="card-price">${p.price}</div>
-              <button class="card-add" onclick="showToast('${p.name} נוסף לעגלה')">הוסף לעגלה</button>
+              <button class="card-add" onclick="event.stopPropagation(); addToCart(${p.id})">הוסף לעגלה</button>
             </div>
           </div>
         </div>
@@ -572,7 +671,190 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    /* ---------- CART + WHATSAPP ORDERS ---------- */
+
+    // Orders are sent to this WhatsApp number: international format, digits only (972 = Israel, drop the leading 0).
+    const WHATSAPP_NUMBER = '972500000000';
+
+    const CART_KEY = 'lumenform-cart';
+    let cart = loadCart();
+
+    function loadCart() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+        return Array.isArray(saved) ? saved.filter(i => products.some(p => p.id === i.id)) : [];
+      } catch (e) { return []; }
+    }
+
+    function saveCart() {
+      try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {}
+    }
+
+    function priceOf(p) { return Number(String(p.price).replace(/[^\d.]/g, '')) || 0; }
+    function formatPrice(n) { return '₪' + n.toLocaleString('he-IL'); }
+
+    function addToCart(productId) {
+      const p = products.find(x => x.id === productId);
+      if (!p) return;
+      const variant = p.variants ? p.variants[p.activeVariant || 0].label : null;
+      const existing = cart.find(i => i.id === productId && i.variant === variant);
+      if (existing) existing.qty++;
+      else cart.push({ id: productId, variant, qty: 1 });
+      saveCart();
+      renderCart();
+      showToast(`${p.name}${variant ? ' (' + variant + ')' : ''} נוסף לעגלה`);
+    }
+
+    function changeQty(index, delta) {
+      const item = cart[index];
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty < 1) cart.splice(index, 1);
+      saveCart();
+      renderCart();
+    }
+
+    function removeItem(index) {
+      cart.splice(index, 1);
+      saveCart();
+      renderCart();
+    }
+
+    function cartTotal() {
+      return cart.reduce((sum, i) => sum + priceOf(products.find(p => p.id === i.id)) * i.qty, 0);
+    }
+
+    function renderCart() {
+      const count = cart.reduce((n, i) => n + i.qty, 0);
+      document.getElementById('nav-cart').textContent = `עגלה (${count})`;
+      const itemsEl = document.getElementById('cart-items');
+      const checkoutEl = document.getElementById('cart-checkout');
+      if (!cart.length) {
+        itemsEl.innerHTML = `<p class="cart-empty">העגלה ריקה.<br/>בחרו מנורה מהחנות 💡</p>`;
+        checkoutEl.style.display = 'none';
+        return;
+      }
+      checkoutEl.style.display = '';
+      itemsEl.innerHTML = cart.map((item, idx) => {
+        const p = products.find(x => x.id === item.id);
+        const v = p.variants && p.variants.find(x => x.label === item.variant);
+        const img = v ? v.img : p.img;
+        return `
+          <div class="cart-item">
+            <div class="cart-thumb">${img ? `<img src="${img}" alt="" />` : p.emoji}</div>
+            <div>
+              <div class="cart-item-name">${p.name}</div>
+              <div class="cart-item-meta">${item.variant ? item.variant + ' · ' : ''}${p.price}</div>
+            </div>
+            <div class="cart-item-side">
+              <div class="qty">
+                <button onclick="changeQty(${idx}, 1)" aria-label="הוספה">+</button>
+                <span>${item.qty}</span>
+                <button onclick="changeQty(${idx}, -1)" aria-label="הפחתה">−</button>
+              </div>
+              <button class="cart-remove" onclick="removeItem(${idx})">הסרה</button>
+            </div>
+          </div>`;
+      }).join('');
+      document.getElementById('cart-total').textContent = formatPrice(cartTotal());
+    }
+
+    function openCart() {
+      renderCart();
+      document.getElementById('cart-drawer').classList.add('open');
+      document.getElementById('cart-drawer').setAttribute('aria-hidden', 'false');
+      document.getElementById('cart-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCart() {
+      document.getElementById('cart-drawer').classList.remove('open');
+      document.getElementById('cart-drawer').setAttribute('aria-hidden', 'true');
+      document.getElementById('cart-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCart(); });
+
+    // Returns the trimmed values of the given fields, or null (and highlights the empty ones) if any is missing.
+    function requireFields(ids) {
+      let ok = true;
+      const values = {};
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        values[id] = el.value.trim();
+        el.classList.toggle('field-error', !values[id]);
+        if (!values[id]) { if (ok) el.focus(); ok = false; }
+      });
+      return ok ? values : null;
+    }
+
+    function openWhatsApp(message) {
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+    }
+
+    function sendOrder() {
+      if (!cart.length) return;
+      const f = requireFields(['order-name', 'order-phone', 'order-address']);
+      if (!f) { showToast('נא למלא את השדות המסומנים'); return; }
+      const phoneEl = document.getElementById('order-phone');
+      const digits = f['order-phone'].replace(/\D/g, '');
+      if (digits.length < 9 || digits.length > 12) {
+        phoneEl.classList.add('field-error');
+        phoneEl.focus();
+        showToast('מספר הטלפון לא נראה תקין');
+        return;
+      }
+      const notes = document.getElementById('order-notes').value.trim();
+      const lines = cart.map(item => {
+        const p = products.find(x => x.id === item.id);
+        return `• ${p.name}${item.variant ? ' (' + item.variant + ')' : ''} × ${item.qty} — ${formatPrice(priceOf(p) * item.qty)}`;
+      });
+      const message = [
+        'שלום! אשמח להזמין מלומנפורם:',
+        '',
+        ...lines,
+        '',
+        `סה״כ: ${formatPrice(cartTotal())}`,
+        '',
+        `שם: ${f['order-name']}`,
+        `טלפון: ${f['order-phone']}`,
+        `כתובת: ${f['order-address']}`,
+        ...(notes ? [`הערות: ${notes}`] : []),
+      ].join('\n');
+      openWhatsApp(message);
+      cart = [];
+      saveCart();
+      ['order-name', 'order-phone', 'order-address', 'order-notes'].forEach(id => document.getElementById(id).value = '');
+      renderCart();
+      closeCart();
+      showToast('ההזמנה נפתחה בוואטסאפ — לחצו "שלח" כדי לסיים');
+    }
+
+    function sendCustomRequest() {
+      const f = requireFields(['custom-name', 'custom-details']);
+      if (!f) { showToast('נא למלא שם ופרטים על הבקשה'); return; }
+      const email = document.getElementById('custom-email').value.trim();
+      const color = document.getElementById('custom-color').value.trim();
+      const message = [
+        'שלום! יש לי בקשה להזמנה מותאמת אישית:',
+        '',
+        `שם: ${f['custom-name']}`,
+        ...(email ? [`אימייל: ${email}`] : []),
+        `סוג פריט: ${document.getElementById('custom-type').value}`,
+        ...(color ? [`צבע / חומר: ${color}`] : []),
+        '',
+        f['custom-details'],
+      ].join('\n');
+      openWhatsApp(message);
+      showToast('הבקשה נפתחה בוואטסאפ — לחצו "שלח" כדי לסיים');
+    }
+
+    document.querySelectorAll('input, textarea').forEach(el =>
+      el.addEventListener('input', () => el.classList.remove('field-error')));
+
     renderProducts('all');
+    renderCart();
   </script>
 </body>
 </html>
