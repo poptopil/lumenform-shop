@@ -229,6 +229,14 @@
       padding: 0; transition: background 0.2s;
     }
     .img-dot.active { background: var(--amber); }
+    .swatches { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin: -0.3rem 0 0.9rem; }
+    .swatch {
+      width: 22px; height: 22px; border-radius: 50%; padding: 0; cursor: pointer;
+      border: 2px solid rgba(240,237,230,0.25); transition: transform 0.15s;
+    }
+    .swatch:hover { transform: scale(1.12); }
+    .swatch.active { outline: 2px solid var(--amber); outline-offset: 2px; }
+    .swatch-label { font-size: 0.78rem; color: var(--muted); margin-inline-start: 0.25rem; }
     .badge {
       position: absolute; top: 1rem; right: 1rem;
       background: var(--amber); color: #1A1A1A;
@@ -612,7 +620,11 @@
       { id:21, name:"מנורת פיקסלים", category:"pop", price:"₪219", desc:"דמויות בסגנון משחקי 8-ביט, בצבעים מלאים מהמדפסת — בלי צביעה.", emoji:"👾", badge:null },
 
       // מתנות בהתאמה אישית
-      { id:22, name:"מנורת ליתופן מתמונה", category:"gift", price:"₪229", desc:"התמונה שלכם מודפסת בעוביים משתנים — כבויה נראית לבנה, דולקת חושפת את התמונה בפרטי פרטים.", emoji:"🖼️", badge:"מומלץ למתנה" },
+      { id:22, name:"מסגרת ליתופן מוארת", category:"gift", price:"₪229", desc:"התמונה שלכם מודפסת בעוביים משתנים בתוך מסגרת מוארת — כבויה נראית לבנה, דולקת חושפת את התמונה בפרטי פרטים. בחרו את צבע המסגרת.",
+        variants:[{img:"images/litho-frame-white.jpg", label:"סטודיו"},{img:"images/litho-frame-room.jpg", label:"בחדר"}], photosOnly:true,
+        colors:["white","black","grey","red","blue","green","pink"],
+        colorImgs:{white:"images/litho-frame-white.jpg", black:"images/litho-frame-black.jpg", grey:"images/litho-frame-grey.jpg", red:"images/litho-frame-red.jpg", blue:"images/litho-frame-blue.jpg", green:"images/litho-frame-green.jpg", pink:"images/litho-frame-pink.jpg"},
+        badge:"מומלץ למתנה" },
       { id:23, name:"מנורת שם", category:"gift", price:"₪179", desc:"שם או מילה באותיות תלת-מימד מוארות, על בסיס עץ עם חריטת לייזר של תאריך או הקדשה.", emoji:"✨", badge:null },
       { id:24, name:"מנורת לילה לחדר ילדים", category:"gift", price:"₪159", desc:"דמות חמודה (דינוזאור, ענן, חללית) עם שם הילד. אור חם ועמום ומעטפת בטוחה לחלוטין.", emoji:"🦕", badge:null },
       { id:25, name:"מפת עיר מוארת", category:"gift", price:"₪299", desc:"מפת הרחובות של העיר או השכונה שלכם בתבליט, מוארת מאחור. אפשר לסמן נקודה מיוחדת.", emoji:"🗺️", badge:null },
@@ -641,6 +653,46 @@
     };
     let currentFilter = 'all';
 
+    // Filament colours customers can choose. A product offers them via `colors` (list of keys);
+    // `colorImgs` (optional) shows a photo of that colour as the first image.
+    const FILAMENT = {
+      white: { name: 'לבן', hex: '#EEECE6' }, black: { name: 'שחור', hex: '#262628' }, grey: { name: 'אפור', hex: '#8C8F93' },
+      red: { name: 'אדום', hex: '#C12E1F' }, blue: { name: 'כחול', hex: '#0A5BA8' }, green: { name: 'ירוק', hex: '#3E8E41' },
+      pink: { name: 'ורוד', hex: '#E8A0B4' },
+    };
+    // Products printed in an opaque colour (shades, decor, desk) offer the whole palette.
+    [2, 14, 15, 16, 6, 26, 27, 28, 29, 30, 31, 7].forEach(id => {
+      const p = products.find(x => x.id === id);
+      if (p && !p.colors) p.colors = Object.keys(FILAMENT);
+    });
+
+    function activeColor(p) { return p.colors ? (p.activeColor || p.colors[0]) : null; }
+
+    function productImage(p, variantIdx) {
+      const c = activeColor(p);
+      if (c && p.colorImgs && p.colorImgs[c] && variantIdx === 0) return p.colorImgs[c];
+      return p.variants ? p.variants[variantIdx].img : p.img;
+    }
+
+    function selectColor(productId, key) {
+      const p = products.find(x => x.id === productId);
+      if (!p) return;
+      p.activeColor = key;
+      if (p.colorImgs) p.activeVariant = 0;          // show the photo of the chosen colour
+      renderProducts(currentFilter);
+    }
+
+    function swatchesHtml(p) {
+      if (!p.colors) return '';
+      const c = activeColor(p);
+      return `<div class="swatches" role="radiogroup" aria-label="צבע">
+        ${p.colors.map(k => `<button class="swatch ${k === c ? 'active' : ''}" style="background:${FILAMENT[k].hex}"
+            role="radio" aria-checked="${k === c}" aria-label="${FILAMENT[k].name}" title="${FILAMENT[k].name}"
+            onclick="event.stopPropagation(); selectColor(${p.id}, '${k}')"></button>`).join('')}
+        <span class="swatch-label">צבע: ${FILAMENT[c].name}</span>
+      </div>`;
+    }
+
     function renderFilters() {
       const cats = [['all', 'הכל'], ...Object.entries(categoryLabels)];
       document.getElementById('filter-bar').innerHTML = cats.map(([key, label]) => {
@@ -655,7 +707,7 @@
       grid.innerHTML = filtered.map(p => {
         const hasVariants = !!p.variants && p.variants.length > 1;
         const activeIdx = p.activeVariant || 0;
-        const imgSrc = p.variants ? p.variants[activeIdx].img : p.img;
+        const imgSrc = productImage(p, activeIdx);
         const arrows = hasVariants ? `
             <button class="img-arrow prev" onclick="event.stopPropagation(); changeVariant(${p.id}, -1)">‹</button>
             <button class="img-arrow next" onclick="event.stopPropagation(); changeVariant(${p.id}, 1)">›</button>
@@ -676,6 +728,7 @@
             <div class="card-category">${categoryLabels[p.category] || p.category}</div>
             <div class="card-name">${p.name}</div>
             <div class="card-desc">${p.desc}</div>
+            ${swatchesHtml(p)}
             <div class="card-footer">
               <div class="card-price">${p.price}</div>
               <button class="card-add" onclick="event.stopPropagation(); addToCart(${p.id})">הוסף לעגלה</button>
@@ -743,13 +796,21 @@
     function addToCart(productId) {
       const p = products.find(x => x.id === productId);
       if (!p) return;
-      const variant = p.variants ? p.variants[p.activeVariant || 0].label : null;
-      const existing = cart.find(i => i.id === productId && i.variant === variant);
+      // Photo-only variants (e.g. "studio" / "in a room") are not a choice the customer makes.
+      const variant = p.variants && !p.photosOnly ? p.variants[p.activeVariant || 0].label : null;
+      const color = activeColor(p);
+      const existing = cart.find(i => i.id === productId && i.variant === variant && (i.color || null) === color);
       if (existing) existing.qty++;
-      else cart.push({ id: productId, variant, qty: 1 });
+      else cart.push({ id: productId, variant, color, qty: 1 });
       saveCart();
       renderCart();
-      showToast(`${p.name}${variant ? ' (' + variant + ')' : ''} נוסף לעגלה`);
+      showToast(`${p.name}${optionsText({ variant, color }, ' (', ')')} נוסף לעגלה`);
+    }
+
+    // "warm light · black" style text for a cart line's chosen options.
+    function optionsText(item, before = '', after = '') {
+      const parts = [item.variant, item.color && FILAMENT[item.color] ? 'צבע ' + FILAMENT[item.color].name : null].filter(Boolean);
+      return parts.length ? before + parts.join(', ') + after : '';
     }
 
     function changeQty(index, delta) {
@@ -785,13 +846,13 @@
       itemsEl.innerHTML = cart.map((item, idx) => {
         const p = products.find(x => x.id === item.id);
         const v = p.variants && p.variants.find(x => x.label === item.variant);
-        const img = v ? v.img : p.img;
+        const img = (item.color && p.colorImgs && p.colorImgs[item.color]) || (v ? v.img : productImage(p, 0));
         return `
           <div class="cart-item">
             <div class="cart-thumb">${img ? `<img src="${img}" alt="" />` : p.emoji}</div>
             <div>
               <div class="cart-item-name">${p.name}</div>
-              <div class="cart-item-meta">${item.variant ? item.variant + ' · ' : ''}${p.price}</div>
+              <div class="cart-item-meta">${optionsText(item, '', ' · ')}${p.price}</div>
             </div>
             <div class="cart-item-side">
               <div class="qty">
@@ -855,7 +916,7 @@
       const notes = document.getElementById('order-notes').value.trim();
       const lines = cart.map(item => {
         const p = products.find(x => x.id === item.id);
-        return `• ${p.name}${item.variant ? ' (' + item.variant + ')' : ''} × ${item.qty} — ${formatPrice(priceOf(p) * item.qty)}`;
+        return `• ${p.name}${optionsText(item, ' (', ')')} × ${item.qty} — ${formatPrice(priceOf(p) * item.qty)}`;
       });
       const message = [
         'שלום! אשמח להזמין מלומנפורם:',
