@@ -237,6 +237,7 @@
     .swatch:hover { transform: scale(1.12); }
     .swatch.active { outline: 2px solid var(--amber); outline-offset: 2px; }
     .swatch-label { font-size: 0.78rem; color: var(--muted); margin-inline-start: 0.25rem; }
+    .swatch-more { flex-basis: 100%; font-size: 0.72rem; color: var(--muted); opacity: 0.8; }
     .badge {
       position: absolute; top: 1rem; right: 1rem;
       background: var(--amber); color: #1A1A1A;
@@ -621,9 +622,11 @@
 
       // מתנות בהתאמה אישית
       { id:22, name:"מסגרת ליתופן מוארת", category:"gift", price:"₪229", desc:"התמונה שלכם מודפסת בעוביים משתנים בתוך מסגרת מוארת — כבויה נראית לבנה, דולקת חושפת את התמונה בפרטי פרטים. בחרו את צבע המסגרת.",
-        variants:[{img:"images/litho-frame-white.jpg", label:"סטודיו"},{img:"images/litho-frame-room.jpg", label:"בחדר"}], photosOnly:true,
-        colors:["white","black","grey","red","blue","green","pink"],
-        colorImgs:{white:"images/litho-frame-white.jpg", black:"images/litho-frame-black.jpg", grey:"images/litho-frame-grey.jpg", red:"images/litho-frame-red.jpg", blue:"images/litho-frame-blue.jpg", green:"images/litho-frame-green.jpg", pink:"images/litho-frame-pink.jpg"},
+        variants:[{img:"images/litho-frame-room-white.jpg", label:"בחדר"},{img:"images/litho-frame-white.jpg", label:"סטודיו"}], photosOnly:true,
+        colors:["white","black","grey"],
+        colorImgs:{white:["images/litho-frame-room-white.jpg","images/litho-frame-white.jpg"],
+                   black:["images/litho-frame-room-black.jpg","images/litho-frame-black.jpg"],
+                   grey:["images/litho-frame-room-grey.jpg","images/litho-frame-grey.jpg"]},
         badge:"מומלץ למתנה" },
       { id:23, name:"מנורת שם", category:"gift", price:"₪179", desc:"שם או מילה באותיות תלת-מימד מוארות, על בסיס עץ עם חריטת לייזר של תאריך או הקדשה.", emoji:"✨", badge:null },
       { id:24, name:"מנורת לילה לחדר ילדים", category:"gift", price:"₪159", desc:"דמות חמודה (דינוזאור, ענן, חללית) עם שם הילד. אור חם ועמום ומעטפת בטוחה לחלוטין.", emoji:"🦕", badge:null },
@@ -653,32 +656,46 @@
     };
     let currentFilter = 'all';
 
-    // Filament colours customers can choose. A product offers them via `colors` (list of keys);
-    // `colorImgs` (optional) shows a photo of that colour as the first image.
+    // Filament colours. A product offers the few most likely ones via `colors` (first = default);
+    // any other colour can be ordered on request. `colorImgs` (optional): colour → photos, one per variant.
     const FILAMENT = {
       white: { name: 'לבן', hex: '#EEECE6' }, black: { name: 'שחור', hex: '#262628' }, grey: { name: 'אפור', hex: '#8C8F93' },
-      red: { name: 'אדום', hex: '#C12E1F' }, blue: { name: 'כחול', hex: '#0A5BA8' }, green: { name: 'ירוק', hex: '#3E8E41' },
-      pink: { name: 'ורוד', hex: '#E8A0B4' },
+      beige: { name: 'בז׳', hex: '#D9C9A8' }, terracotta: { name: 'טרקוטה', hex: '#B5603C' },
+      sage: { name: 'ירוק מרווה', hex: '#9DAE8B' }, gold: { name: 'זהב', hex: '#C9A24B' },
     };
-    // Products printed in an opaque colour (shades, decor, desk) offer the whole palette.
-    [2, 14, 15, 16, 6, 26, 27, 28, 29, 30, 31, 7].forEach(id => {
-      const p = products.find(x => x.id === id);
-      if (p && !p.colors) p.colors = Object.keys(FILAMENT);
+    // The colours each product is most likely to be bought in.
+    const LIKELY_COLORS = {
+      2: ['white', 'black', 'beige'],         // helix pendant
+      14: ['white', 'black', 'beige'],        // XL bell pendant
+      15: ['white', 'black', 'gold'],         // fractal pendant
+      16: ['white', 'beige', 'sage'],         // origami pendant
+      7: ['black', 'white'],                  // arc desk lamp
+      6: ['gold', 'white', 'black'],          // honeycomb vase
+      26: ['white', 'terracotta', 'sage'],    // self-watering planter
+      27: ['white', 'black', 'terracotta'],   // key tray
+      28: ['black', 'white', 'grey'],         // headphone stand
+      29: ['black', 'white', 'grey'],         // phone stand
+      30: ['white', 'black', 'sage'],         // desk organizer
+      31: ['black', 'white'],                 // work lamp
+    };
+    Object.entries(LIKELY_COLORS).forEach(([id, colors]) => {
+      const p = products.find(x => x.id === Number(id));
+      if (p && !p.colors) p.colors = colors;
     });
 
     function activeColor(p) { return p.colors ? (p.activeColor || p.colors[0]) : null; }
 
     function productImage(p, variantIdx) {
       const c = activeColor(p);
-      if (c && p.colorImgs && p.colorImgs[c] && variantIdx === 0) return p.colorImgs[c];
+      const imgs = c && p.colorImgs && p.colorImgs[c];
+      if (imgs) return Array.isArray(imgs) ? imgs[Math.min(variantIdx, imgs.length - 1)] : (variantIdx === 0 ? imgs : p.variants[variantIdx].img);
       return p.variants ? p.variants[variantIdx].img : p.img;
     }
 
     function selectColor(productId, key) {
       const p = products.find(x => x.id === productId);
       if (!p) return;
-      p.activeColor = key;
-      if (p.colorImgs) p.activeVariant = 0;          // show the photo of the chosen colour
+      p.activeColor = key;                      // the photo being viewed switches to this colour
       renderProducts(currentFilter);
     }
 
@@ -690,6 +707,7 @@
             role="radio" aria-checked="${k === c}" aria-label="${FILAMENT[k].name}" title="${FILAMENT[k].name}"
             onclick="event.stopPropagation(); selectColor(${p.id}, '${k}')"></button>`).join('')}
         <span class="swatch-label">צבע: ${FILAMENT[c].name}</span>
+        <span class="swatch-more">צבעים נוספים לפי בקשה — כתבו בהערות להזמנה</span>
       </div>`;
     }
 
@@ -846,7 +864,8 @@
       itemsEl.innerHTML = cart.map((item, idx) => {
         const p = products.find(x => x.id === item.id);
         const v = p.variants && p.variants.find(x => x.label === item.variant);
-        const img = (item.color && p.colorImgs && p.colorImgs[item.color]) || (v ? v.img : productImage(p, 0));
+        const cImgs = item.color && p.colorImgs && p.colorImgs[item.color];
+        const img = (Array.isArray(cImgs) ? cImgs[0] : cImgs) || (v ? v.img : productImage(p, 0));
         return `
           <div class="cart-item">
             <div class="cart-thumb">${img ? `<img src="${img}" alt="" />` : p.emoji}</div>
