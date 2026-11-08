@@ -124,7 +124,7 @@
     .btn-ghost:hover { border-color: var(--amber); color: var(--amber); }
 
     .hero-stats {
-      display: flex; gap: 3rem; margin-top: 4rem;
+      display: flex; flex-wrap: wrap; gap: 3rem; margin-top: 4rem;
       border-top: 1px solid var(--border); padding-top: 2rem;
     }
     .stat-num {
@@ -160,7 +160,7 @@
     }
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
       gap: 1.5rem;
     }
     .product-card {
@@ -238,6 +238,12 @@
     .swatch.active { outline: 2px solid var(--amber); outline-offset: 2px; }
     .swatch-label { font-size: 0.78rem; color: var(--muted); margin-inline-start: 0.25rem; }
     .swatch-more { flex-basis: 100%; font-size: 0.72rem; color: var(--muted); opacity: 0.8; }
+    /* Shown when the chosen colour isn't the one in the photo — honest about what's pictured. */
+    .photo-note {
+      position: absolute; top: 0.8rem; left: 50%; transform: translateX(-50%); z-index: 2;
+      background: rgba(20,20,20,0.78); color: var(--text); font-size: 0.75rem;
+      padding: 0.25rem 0.7rem; border-radius: 999px; white-space: nowrap;
+    }
     .badge {
       position: absolute; top: 1rem; right: 1rem;
       background: var(--amber); color: #1A1A1A;
@@ -622,11 +628,8 @@
 
       // מתנות בהתאמה אישית
       { id:22, name:"מסגרת ליתופן מוארת", category:"gift", price:"₪229", desc:"התמונה שלכם מודפסת בעוביים משתנים בתוך מסגרת מוארת — כבויה נראית לבנה, דולקת חושפת את התמונה בפרטי פרטים. בחרו את צבע המסגרת.",
-        variants:[{img:"images/litho-frame-room-white.jpg", label:"בחדר"},{img:"images/litho-frame-white.jpg", label:"סטודיו"}], photosOnly:true,
-        colors:["white","black","grey"],
-        colorImgs:{white:["images/litho-frame-room-white.jpg","images/litho-frame-white.jpg"],
-                   black:["images/litho-frame-room-black.jpg","images/litho-frame-black.jpg"],
-                   grey:["images/litho-frame-room-grey.jpg","images/litho-frame-grey.jpg"]},
+        variants:[{img:"images/litho-frame-shelf.jpg", label:"על המדף"},{img:"images/litho-frame-dark.jpg", label:"בחושך"}], photosOnly:true,
+        colors:["charcoal","black","white"], photoColor:"charcoal",
         badge:"מומלץ למתנה" },
       { id:23, name:"מנורת שם", category:"gift", price:"₪179", desc:"שם או מילה באותיות תלת-מימד מוארות, על בסיס עץ עם חריטת לייזר של תאריך או הקדשה.", emoji:"✨", badge:null },
       { id:24, name:"מנורת לילה לחדר ילדים", category:"gift", price:"₪159", desc:"דמות חמודה (דינוזאור, ענן, חללית) עם שם הילד. אור חם ועמום ומעטפת בטוחה לחלוטין.", emoji:"🦕", badge:null },
@@ -660,6 +663,7 @@
     // any other colour can be ordered on request. `colorImgs` (optional): colour → photos, one per variant.
     const FILAMENT = {
       white: { name: 'לבן', hex: '#EEECE6' }, black: { name: 'שחור', hex: '#262628' }, grey: { name: 'אפור', hex: '#8C8F93' },
+      charcoal: { name: 'אפור כהה', hex: '#3B4049' },
       beige: { name: 'בז׳', hex: '#D9C9A8' }, terracotta: { name: 'טרקוטה', hex: '#B5603C' },
       sage: { name: 'ירוק מרווה', hex: '#9DAE8B' }, gold: { name: 'זהב', hex: '#C9A24B' },
     };
@@ -740,6 +744,8 @@
               ? `<img src="${imgSrc}" alt="${p.name}" loading="lazy" />`
               : `<span style="position:relative;z-index:1">${p.emoji}</span>`}
             ${arrows}
+            ${p.photoColor && activeColor(p) !== p.photoColor
+              ? `<div class="photo-note">בתמונה: ${FILAMENT[p.photoColor].name} · יודפס ב${FILAMENT[activeColor(p)].name}</div>` : ''}
             <div class="card-glow"></div>
           </div>
           <div class="card-body">
