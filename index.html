@@ -239,6 +239,19 @@
     .swatch-label { font-size: 0.78rem; color: var(--muted); margin-inline-start: 0.25rem; }
     .swatch-more { flex-basis: 100%; font-size: 0.72rem; color: var(--muted); opacity: 0.8; }
     /* Shown when the chosen colour isn't the one in the photo — honest about what's pictured. */
+    /* Room photos are AI-generated backgrounds around a real product photo: say so. */
+    .ai-note {
+      position: absolute; bottom: 0.7rem; right: 0.7rem; z-index: 2;
+      background: rgba(20,20,20,0.72); color: var(--muted); font-size: 0.7rem;
+      padding: 0.15rem 0.55rem; border-radius: 999px;
+    }
+    .card-img .img-dots { bottom: 2.4rem; }
+    /* Gallery: made-to-order work that isn't sold in the shop. */
+    #gallery { border-top: 1px solid var(--border); }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 1rem; }
+    .gallery-item { position: relative; background: var(--card); overflow: hidden; aspect-ratio: 3/4; }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-caption { color: var(--muted); font-size: 0.9rem; margin: 1rem 0 1.5rem; max-width: 560px; }
     .photo-note {
       position: absolute; top: 0.8rem; left: 50%; transform: translateX(-50%); z-index: 2;
       background: rgba(20,20,20,0.78); color: var(--text); font-size: 0.75rem;
@@ -316,7 +329,7 @@
     }
     .footer-logo { font-family: 'Heebo', sans-serif; font-weight: 700; font-size: 1.1rem; }
     .footer-logo span { color: var(--amber); }
-    .footer-links { display: flex; gap: 1.5rem; list-style: none; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 1.5rem; list-style: none; }
     .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
     .footer-links a:hover { color: var(--amber); }
     .footer-copy { color: var(--muted); font-size: 0.78rem; }
@@ -420,6 +433,7 @@
       <li><a href="#shop">חנות</a></li>
       <li><a href="#process">תהליך הייצור</a></li>
       <li><a href="#custom">הזמנה מותאמת</a></li>
+      <li><a href="#gallery">גלריה</a></li>
       <li><a href="#about">אודות</a></li>
     </ul>
     <button class="nav-cart" id="nav-cart" onclick="openCart()">עגלה (0)</button>
@@ -460,6 +474,19 @@
     <div class="filter-bar" id="filter-bar"></div>
 
     <div class="product-grid" id="product-grid"></div>
+  </section>
+
+  <!-- GALLERY: made-to-order work, not for sale -->
+  <section id="gallery">
+    <p class="section-label">גלריה</p>
+    <h2 class="section-title">עבודות בהזמנה אישית</h2>
+    <p class="section-sub">דוגמאות לדברים שהדפסנו לפי בקשה של לקוחות. הפריטים כאן אינם למכירה בחנות — אבל יש לכם רעיון משלכם? נשמח להדפיס אותו.</p>
+    <div class="gallery-grid">
+      <figure class="gallery-item"><img src="images/vader-holder.jpg" alt="מעמד לשלט משחק בהשראת קסדה" loading="lazy" /></figure>
+      <figure class="gallery-item"><img src="images/vader-holder-room.jpg" alt="מעמד לשלט משחק על שולחן גיימינג" loading="lazy" /><div class="ai-note">הרקע הוא הדמיה · המוצר אמיתי</div></figure>
+    </div>
+    <p class="gallery-caption">מעמד לשלט משחק בהשראת קסדה מפורסמת, הודפס לשימוש אישי של לקוח.</p>
+    <a href="#custom" class="btn-primary">יש לי רעיון — הזמנה מותאמת</a>
   </section>
 
   <!-- PROCESS -->
@@ -601,6 +628,8 @@
   <script>
     const products = [
       // מנורות שולחן ורצפה
+      { id:32, name:"מנורת צלעות", category:"lamp", price:"₪199", desc:"מנורת שולחן עם עשרות צלעות דקות שמפזרות אור רך ושווה. באור חם או לבן, לבחירתך.",
+        variants:[{img:"images/ribbed-lamp-room.jpg", label:"אור חם", ai:true},{img:"images/ribbed-lamp-warm.jpg", label:"אור חם"},{img:"images/ribbed-lamp-white.jpg", label:"אור לבן"}], badge:"חדש" },
       { id:11, name:"מנורת שבלול", category:"lamp", price:"₪249", desc:"שבלול מודפס בתלת-מימד עם קונכייה מפוזרת אור. זמין באור חם או באור לבן קר, לבחירתך.", variants:[{img:"images/snail-lamp-warm.jpg", label:"אור חם"},{img:"images/snail-lamp-white.jpg", label:"אור לבן"}], badge:"חדש" },
       { id:1, name:"מנורת שולחן וורונוי", category:"lamp", price:"₪349", desc:"רשת וורונוי גיאומטרית. אור חם ומפוזר דרך PLA טבעי.", emoji:"🔆", badge:null },
       { id:7, name:"מנורת שולחן קשת", category:"lamp", price:"₪319", desc:"קו קשת נקי עם קרן ממוקדת. מושלם לסביבת עבודה.", emoji:"🕯️", badge:null },
@@ -621,6 +650,8 @@
       { id:18, name:"מנורת ירח לקיר", category:"wall", price:"₪239", desc:"חצי ירח עם מכתשים מפורטים, נתלה על הקיר ונדלק באור לבן-כחלחל.", emoji:"🌙", badge:null },
 
       // מנורות פופ
+      { id:33, name:"מנורת דרקון יורק אש", category:"pop", price:"₪249", desc:"דרקון שחור נושף ענן אש מואר — מנורת לילה דרמטית לחדר ילדים או למעריצי פנטזיה.",
+        variants:[{img:"images/dragon-lamp-room.jpg", label:"בחדר", ai:true},{img:"images/dragon-lamp.jpg", label:"סטודיו"}], photosOnly:true, badge:"חדש" },
       { id:9, name:"מנורת פחית Monster", category:"pop", price:"₪159", desc:"פחית Monster Energy Ultra מודפסת בתלת-מימד עם תאורה פנימית הניתנת להחלפה — אור חם קלאסי או תאורת LED צבעונית.", variants:[{img:"images/monster-lamp-warm.jpg", label:"אור חם"},{img:"images/monster-lamp-color.jpg", label:"אור צבעוני"}], badge:"הנמכר ביותר" },
       { id:19, name:"פחית עם התווית שלך", category:"pop", price:"₪189", desc:"אותה מנורת פחית — עם עיצוב, שם או לוגו משלכם. מושלם למתנה או לעסק.", emoji:"🥫", badge:null },
       { id:20, name:"מנורת קלטת רטרו", category:"pop", price:"₪199", desc:"קלטת שמע ענקית עם סלילים שקופים שנדלקים. נוסטלגיה של שנות ה-80.", emoji:"📼", badge:null },
@@ -744,6 +775,7 @@
               ? `<img src="${imgSrc}" alt="${p.name}" loading="lazy" />`
               : `<span style="position:relative;z-index:1">${p.emoji}</span>`}
             ${arrows}
+            ${p.variants && p.variants[activeIdx].ai ? `<div class="ai-note">הרקע הוא הדמיה · המוצר אמיתי</div>` : ''}
             ${p.photoColor && activeColor(p) !== p.photoColor
               ? `<div class="photo-note">בתמונה: ${FILAMENT[p.photoColor].name} · יודפס ב${FILAMENT[activeColor(p)].name}</div>` : ''}
             <div class="card-glow"></div>
